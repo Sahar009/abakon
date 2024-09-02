@@ -4,6 +4,7 @@ const app = express();
 const cloudinary = require('cloudinary').v2;
 const cors = require('cors')
 // const protect = require('../middleware/Authmiddleware')
+const userRoute = require("./Route/userRoute");
 
 
 const dotenv = require("dotenv").config();
@@ -12,6 +13,7 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 // const errorHandler = require('../middleware/errorMiddleware')
 const path = require("path");
+const errorHandler = require("./middleware/errorMiddleware");
 const serverPath = path.resolve(__dirname, "server.js");
 require(serverPath);
 
@@ -36,11 +38,13 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(cors())
 //route middleware
 //Routes middleware
+
+app.use("/api/users", userRoute);
 // app.use(protect);
 
 
 // // error handler
-// app.use(errorHandler)
+app.use(errorHandler)
 
 
 mongoose

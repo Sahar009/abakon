@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const Profile = require('./profileModel');
+
 const userSchema = mongoose.Schema({
   firstName: {
     type: String,
@@ -29,8 +29,8 @@ const userSchema = mongoose.Schema({
  
   phone: {
     type: String,
-    unique: true,
-    trim: true,
+    // unique: true,
+    // trim: true,
     default: '+234',
   },
   transactionPin:{
@@ -49,14 +49,15 @@ transactions: [{
 
 // encrypt password before saving to DB
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    return next();
-  }
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(this.password, salt);
+    if (!this.isModified('password')) {
+      return next();
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(this.password, salt);
+    this.password = hashedPassword;
+    next();
+  });
+  
 
-  this.password = hashedPassword;
-});
-
-const User = Profile.discriminator('User', userSchema);
+const User = mongoose.model("user", userSchema);
 module.exports = User;

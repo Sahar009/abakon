@@ -41,8 +41,12 @@ const registerUser = async_handler(async (req, res) => {
 
     // Create a new user
     const user = await User.create({
-        name,
-        email,
+        firstName,
+        lastName,
+        phone, 
+        email, 
+        password,
+        transactionPin,
         password,
     });
 
@@ -61,9 +65,16 @@ const registerUser = async_handler(async (req, res) => {
     // Send user data and token in the response
     res.status(201).json({
         _id: user._id,
-        name: user.name,
-        email: user.email,
-        photo: user.photo,
+        firstName:user.firstName,
+        lastName:user.lastName,
+        phone:user.phone, 
+        email:user.email, 
+        password:user.password,
+        transactionPin:user.transactionPin,
         token,
     });
 });
+
+module.exports ={
+    registerUser
+}

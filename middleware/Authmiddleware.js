@@ -19,7 +19,6 @@ const protect = asyncHandler(async (req, res, next) => {
 
     // Get user or listener id from token
     const user = await User.findById(verified.id).select('-password');
-    const listener = await Listener.findById(verified.id).select('-password');
 
     if (user) {
       req.user = user;
