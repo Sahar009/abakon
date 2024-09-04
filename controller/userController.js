@@ -16,10 +16,10 @@ const generateActivationToken = () => {
 };
 
 const registerUser = asyncHandler(async (req, res, next) => {
-    const { firstName, lastName, phone, email, password, transactionPin } = req.body;
+    const { firstName, lastName, phone, email, password, transactionPin, state } = req.body;
 
     // Validation
-    if (!firstName || !lastName || !phone || !email || !password || !transactionPin) {
+    if (!firstName || !lastName || !phone || !email || !password || !transactionPin || !state) {
         res.status(400);
         throw new Error('Please fill in all required fields');
     }
@@ -34,12 +34,24 @@ const registerUser = asyncHandler(async (req, res, next) => {
         throw new Error('Transaction Pin must be at least 4 characters');
     }
 
-    // Check if the user email already exists
-    const userExist = await User.findOne({ email });
+    // Validate phone number
+    if (!/^\d{11}$/.test(phone)) {
+        res.status(400);
+        throw new Error('Phone number must be exactly 11 digits and contain only numbers');
+    }
 
-    if (userExist) {
+    // Check if the user email or phone already exists
+    const emailExists = await User.findOne({ email });
+    const phoneExists = await User.findOne({ phone });
+
+    if (emailExists) {
         res.status(400);
         throw new Error('Email has already been registered');
+    }
+
+    if (phoneExists) {
+        res.status(400);
+        throw new Error('Phone number has already been registered');
     }
 
     // Generate 4-character activation token
@@ -53,6 +65,7 @@ const registerUser = asyncHandler(async (req, res, next) => {
         firstName,
         lastName,
         phone,
+        state,
         email,
         password,
         transactionPin: hashedTransactionPin,
@@ -175,10 +188,10 @@ const logOutUser = asyncHandler(async (req, res) => {
     const getUser = asyncHandler(async(req,res) =>{
         const user = await User.findById(req.user._id)
         if (user){
-            const { _id, firstName, lastName, phone, email,transactions } = user;
+            const { _id, firstName, lastName, phone, email,transactions,state, isActive } = user;
             res.status(200).json(
                 {
-                    _id, firstName, lastName, phone, email,transactions
+                    _id, firstName, lastName, phone, email,state,transactions, isActive
                 
             });
         

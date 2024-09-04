@@ -27,7 +27,14 @@ const userSchema = mongoose.Schema({
   },
   phone: {
     type: String,
-    default: '+234',
+    required: [true, 'Please add a phone number'],
+    unique: true,
+    trim: true,
+    // default: '+234',
+  },
+  state: {
+    type: String,
+   
   },
   transactionPin: {
     type: String,

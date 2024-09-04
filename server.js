@@ -5,7 +5,7 @@ const cloudinary = require('cloudinary').v2;
 const cors = require('cors')
 // const protect = require('../middleware/Authmiddleware')
 const userRoute = require("./Route/userRoute");
-
+const transactionRoute = require('./Route/transactionRoute')
 
 const dotenv = require("dotenv").config();
 const PORT = 5000;
@@ -40,6 +40,7 @@ app.use(cors())
 //Routes middleware
 
 app.use("/api/users", userRoute);
+app.use('api/transaction',transactionRoute)
 // app.use(protect);
 
 
