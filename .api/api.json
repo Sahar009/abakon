@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "apis": [
+    {
+      "identifier": "strowallet",
+      "source": "@strowallet/v1.0#prifw10l92zve7s",
+      "integrity": "sha512-5MJdSi5HLjCcBrRc1wArrfxfZYpK/0OxLM2YZUbXufKbQSK7gVDXy/iZHmBie0BFEnL6/kofWAcfRj0CU1XClA==",
+      "installerVersion": "6.1.2"
+    }
+  ]
+}

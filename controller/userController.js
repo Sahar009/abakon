@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const sendMail = require('../utility/sendMail');
 const User = require('../model/userModel');
-
+const strowallet = require('stream/consumers')
 // Function to generate a JWT token with user id
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '365d' });
@@ -202,11 +202,101 @@ const logOutUser = asyncHandler(async (req, res) => {
         
         })
 
+        
+        const loggedInStatus = asyncHandler(async (req, res) => {
+            // Get the token from the Authorization header
+            const token = req.headers.authorization?.split(' ')[1];
+        
+            // If no token is found, return false
+            if (!token) {
+                return res.status(400).json({ isLoggedIn: false });
+            }
+        
+            try {
+                // Verify the token
+                const verified = jwt.verify(token, process.env.JWT_SECRET);
+        
+                // If verified, return true
+                return res.status(200).json({ isLoggedIn: !!verified });
+            } catch (error) {
+                // If verification fails, return false
+                return res.status(400).json({ isLoggedIn: false });
+            }
+        });
 
+        const ChangePassword = asyncHandler(async (req, res) => {
+            const user = await User.findById(req.user._id);
+          
+            const { oldPassword, password } = req.body;
+          
+            if (!user) {
+              res.status(400);
+              throw new Error("User Not Found, sign up");
+            }
+            // validation
+            if (!oldPassword || !password) {
+              res.status(400);
+              throw new Error("please add old and new password ");
+            }
+          
+            //check  if old password matches passwordin DB
+          
+            const passwordIsCorrect = await bcrypt.compare(oldPassword, user.password);
+          
+            // Sava new password
+            if (user && passwordIsCorrect) {
+              user.password = password;
+              await user.save();
+              res.status(200).send("password change successful");
+            } else {
+              res.status(404);
+              throw new Error("Old passwword is incorrect ");
+            }
+          });
+
+    const updateTransactionPin = asyncHandler(async (req, res) => {
+            const user = await User.findById(req.user._id);
+        
+            const { oldTransactionPin, newTransactionPin } = req.body;
+        
+            // Validation
+            if (!user) {
+                res.status(400);
+                throw new Error('User not found');
+            }
+        
+            if (!oldTransactionPin || !newTransactionPin) {
+                res.status(400);
+                throw new Error('Please provide both old and new transaction PINs');
+            }
+        
+            // Check if old transaction PIN matches the one in the DB
+            const isOldPinValid = await bcrypt.compare(oldTransactionPin, user.transactionPin);
+        
+            if (!isOldPinValid) {
+                res.status(400);
+                throw new Error('Old transaction PIN is incorrect');
+            }
+        
+            // Hash the new transaction PIN
+            const hashedNewTransactionPin = await bcrypt.hash(newTransactionPin, 12);
+        
+            // Update the user’s transaction PIN
+            user.transactionPin = hashedNewTransactionPin;
+            await user.save();
+        
+            res.status(200).json({
+                success: true,
+                message: 'Transaction PIN updated successfully',
+            });
+        });
 module.exports = {
     registerUser,
     activateAccount,
     loginUser,
     logOutUser,
-    getUser
+    getUser,
+    loggedInStatus,
+    ChangePassword,
+    updateTransactionPin
 };

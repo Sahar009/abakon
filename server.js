@@ -1,62 +1,58 @@
 const express = require("express");
-const { default: mongoose } = require("mongoose");
-const app = express();
+const mongoose = require("mongoose");
 const cloudinary = require('cloudinary').v2;
-const cors = require('cors')
-// const protect = require('../middleware/Authmiddleware')
-const userRoute = require("./Route/userRoute");
-const transactionRoute = require('./Route/transactionRoute')
-
+const cors = require('cors');
 const dotenv = require("dotenv").config();
-const PORT = 5000;
+const path = require("path");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-// const errorHandler = require('../middleware/errorMiddleware')
-const path = require("path");
 const errorHandler = require("./middleware/errorMiddleware");
-const serverPath = path.resolve(__dirname, "server.js");
-require(serverPath);
+const userRoute = require("./Route/userRoute");
+const transactionRoute = require('./Route/transactionRoute');
 
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware setup
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(bodyParser.json());
+app.use(cors());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
+});
+
+// Route middleware
+app.use("/api/users", userRoute);
+app.use('/api/transaction', transactionRoute);
+
+// Error handler middleware
+app.use(errorHandler);
+
+// Fallback error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+
+// Root route
 app.get("/", (req, res) => {
   res.send("Home page");
 });
-// Configure Cloudinary with your credentials
-cloudinary.config({
-  cloud_name: 'ds5nnf5hi',
-  api_key: '362823846319858',
-  api_secret: 'kjlomN4fuFuRsl06Csmsp3yLt0M',
-});
 
+// Database connection and server start
+mongoose.connect(process.env.MONGO_URI, {
 
-
-//middlewaress
-app.use(express.json());
-app.use(cookieParser());
-app.use(bodyParser.json());
-app.use(express.urlencoded({ extended: false }));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use(cors())
-//route middleware
-//Routes middleware
-
-app.use("/api/users", userRoute);
-app.use('api/transaction',transactionRoute)
-// app.use(protect);
-
-
-// // error handler
-app.use(errorHandler)
-
-
-mongoose
-  .connect(
-    `mongodb+srv://sehindeshoes:JodmZvShIvPBSFbh@cluster0.x6yi2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
-    // TZMwmTUsBq6ZBTM4
-    // JodmZvShIvPBSFbh
-  )
+})
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`Port now starting on Port ${PORT}`);
+      console.log(`Server is running on port ${PORT}`);
     });
-  }) //sahar
+  })
   .catch((err) => console.log(err));
