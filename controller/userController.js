@@ -15,6 +15,8 @@ const generateActivationToken = () => {
     return Math.random().toString(36).substring(2, 6).toUpperCase(); // Generates a random 4-character string
 };
 
+// register user
+
 const registerUser = asyncHandler(async (req, res, next) => {
     const { firstName, lastName, phone, email, password, transactionPin, state } = req.body;
 
@@ -131,6 +133,56 @@ const activateAccount = asyncHandler(async (req, res) => {
     });
 });
 
+// resend activationg taoken
+const resendActivationToken = asyncHandler(async (req, res, next) => {
+    const { email } = req.body;
+
+    // Validate input
+    if (!email) {
+        res.status(400);
+        throw new Error('Please provide an email');
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+
+    // Check if the user is already active
+    if (user.isActive) {
+        res.status(400);
+        throw new Error('Account is already active');
+    }
+
+    // Generate a new activation token
+    const activationToken = generateActivationToken();
+
+    // Update the user with the new activation token
+    user.activationToken = activationToken;
+    await user.save();
+
+    try {
+        // Resend activation email
+        await sendMail({
+            to: user.email,
+            subject: 'Resend: Activate Your Account',
+            message: `Use this token to verify your account: ${activationToken}`
+        });
+
+        res.status(200).json({
+            success: true,
+            message: `A new activation token has been sent to your email: ${user.email}`,
+        });
+    } catch (error) {
+        return next(new Error('Failed to send activation email', 500));
+    }
+});
+
+
+
 
 const loginUser = asyncHandler(async (req, res, next) => {
     const { email, password } = req.body;
@@ -168,6 +220,8 @@ const loginUser = asyncHandler(async (req, res, next) => {
 
     // Return the token and user details in the response
     res.status(200).json({
+        success:true,
+        message: 'Login successful',
         _id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -188,10 +242,10 @@ const logOutUser = asyncHandler(async (req, res) => {
     const getUser = asyncHandler(async(req,res) =>{
         const user = await User.findById(req.user._id)
         if (user){
-            const { _id, firstName, lastName, phone, email,transactions,state, isActive } = user;
+            const { _id, firstName, lastName, phone, email,transactions,state, isActive,walletBalance } = user;
             res.status(200).json(
                 {
-                    _id, firstName, lastName, phone, email,state,transactions, isActive
+                    _id, firstName, lastName, phone, email,state,transactions, isActive,walletBalance
                 
             });
         
@@ -220,7 +274,8 @@ const logOutUser = asyncHandler(async (req, res) => {
                 return res.status(200).json({ isLoggedIn: !!verified });
             } catch (error) {
                 // If verification fails, return false
-                return res.status(400).json({ isLoggedIn: false });
+                return res.status(400).json({
+                     isLoggedIn: false });
             }
         });
 
@@ -247,7 +302,9 @@ const logOutUser = asyncHandler(async (req, res) => {
             if (user && passwordIsCorrect) {
               user.password = password;
               await user.save();
-              res.status(200).send("password change successful");
+              res.status(200).send({
+                success:true,
+                message:"password change successful"});
             } else {
               res.status(404);
               throw new Error("Old passwword is incorrect ");
@@ -267,7 +324,7 @@ const logOutUser = asyncHandler(async (req, res) => {
         
             if (!oldTransactionPin || !newTransactionPin) {
                 res.status(400);
-                throw new Error('Please provide both old and new transaction PINs');
+                throw new Error({message:'Please provide both old and new transaction PINs'});
             }
         
             // Check if old transaction PIN matches the one in the DB
@@ -298,5 +355,6 @@ module.exports = {
     getUser,
     loggedInStatus,
     ChangePassword,
-    updateTransactionPin
+    updateTransactionPin,
+    resendActivationToken
 };

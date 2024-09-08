@@ -30,11 +30,9 @@ const userSchema = mongoose.Schema({
     required: [true, 'Please add a phone number'],
     unique: true,
     trim: true,
-    // default: '+234',
   },
   state: {
     type: String,
-   
   },
   transactionPin: {
     type: String,
@@ -42,7 +40,6 @@ const userSchema = mongoose.Schema({
   },
   activationToken: {
     type: String,
-    // required: true,
   },
   isActive: {
     type: Boolean,
@@ -52,6 +49,10 @@ const userSchema = mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Transactions',
   }],
+  wallet: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Wallet',
+  },
 }, {
   timestamps: true,
 });
