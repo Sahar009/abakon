@@ -129,7 +129,9 @@ const activateAccount = asyncHandler(async (req, res) => {
         lastName: user.lastName,
         phone: user.phone,
         email: user.email,
-        token, // Return the token to be stored in the mobile app's local storage
+        token, 
+        success: true,
+        message: `Account activated successfully`,
     });
 });
 
